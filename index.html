@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disney Emoji Explorer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Disney Emoji Explorer</h1>
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="breadcrumb-item" data-path="">Home</span>
+            </div>
+        </header>
+        
+        <div class="view-controls">
+            <button id="backBtn" class="btn-back" style="display: none;">← Back</button>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search folders or images...">
+            </div>
+        </div>
+
+        <main id="mainContent">
+            <div class="folders-grid" id="foldersGrid"></div>
+            <div class="images-grid" id="imagesGrid" style="display: none;"></div>
+        </main>
+
+        <div class="loading" id="loading">Loading images...</div>
+    </div>
+
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <img class="lightbox-content" id="lightboxImg">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
