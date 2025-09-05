@@ -396,17 +396,6 @@
       ]
     },
     {
-      "name": "disney-munchlings",
-      "displayName": "Disney Munchlings",
-      "images": [
-        "Munchlings Cherry Tart Minnie.webp"
-      ],
-      "count": 1,
-      "preview": [
-        "Munchlings Cherry Tart Minnie.webp"
-      ]
-    },
-    {
       "name": "disney-parks",
       "displayName": "Disney Parks",
       "images": [
@@ -777,10 +766,10 @@
       ],
       "count": 14,
       "preview": [
-        "Anger.webp",
-        "Disgust.webp",
+        "Sadness.webp",
+        "Anxiety.webp",
         "Envy.webp",
-        "Inside Out Alien.webp"
+          "Joy.webp"
       ]
     },
     {
@@ -1591,10 +1580,10 @@
       ],
       "count": 62,
       "preview": [
-        "Admiral Ackbar.webp",
+        "R2 D2.webp",
         "Darth Vader.webp",
         "Imperial Stormtrooper.webp",
-        "Platinum Grogu.webp"
+        "Grogu.webp"
       ]
     },
     {
@@ -1861,10 +1850,10 @@
       ],
       "count": 14,
       "preview": [
-        "Barrel.webp",
+        "Oogie Boogie.webp",
         "Jack Skellington.webp",
-        "Moonstone Jack Skellington.webp",
-        "Santa Jack.webp"
+        "Sally.webp",
+        "Zero.webp"
       ]
     },
     {
@@ -2028,21 +2017,6 @@
         "Meilin Lee.webp",
         "Red Panda Mei.webp",
         "Red Panda Ming Lee.webp"
-      ]
-    },
-    {
-      "name": "uncategorized",
-      "displayName": "Uncategorized",
-      "images": [
-        "DEB_Logo.webp",
-        "Emoji_Blitz_Mickey Balloon_Black.webp",
-        "Emoji_Blitz_Mickey Balloon_Red.webp"
-      ],
-      "count": 3,
-      "preview": [
-        "DEB_Logo.webp",
-        "Emoji_Blitz_Mickey Balloon_Black.webp",
-        "Emoji_Blitz_Mickey Balloon_Red.webp"
       ]
     },
     {

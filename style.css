@@ -53,13 +53,6 @@ header {
     transform: scale(1.1);
 }
 
-.mute-btn.muted .mute-icon::after {
-    content: '🔇';
-}
-
-.mute-btn:not(.muted) .mute-icon::after {
-    content: '🔊';
-}
 
 h1 {
     color: #333;
