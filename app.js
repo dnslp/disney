@@ -1,6 +1,30 @@
 let manifest = null;
 let currentFolder = null;
 let currentPath = [];
+let isMuted = false;
+
+// Text-to-speech functionality
+const speech = {
+    speak: (text) => {
+        if (isMuted || !window.speechSynthesis) return;
+        
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 0.8;
+        
+        window.speechSynthesis.speak(utterance);
+    },
+    
+    stop: () => {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+    }
+};
 
 const elements = {
     loading: document.getElementById('loading'),
@@ -9,6 +33,7 @@ const elements = {
     backBtn: document.getElementById('backBtn'),
     breadcrumb: document.getElementById('breadcrumb'),
     searchInput: document.getElementById('searchInput'),
+    muteBtn: document.getElementById('muteBtn'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightboxImg'),
     lightboxCaption: document.getElementById('lightboxCaption')
@@ -29,6 +54,7 @@ async function init() {
 }
 
 function showFolders(searchTerm = '') {
+    focusedIndex = -1;
     elements.foldersGrid.style.display = 'grid';
     elements.imagesGrid.style.display = 'none';
     elements.backBtn.style.display = 'none';
@@ -62,6 +88,10 @@ function showFolders(searchTerm = '') {
     document.querySelectorAll('.folder-card').forEach(card => {
         card.addEventListener('click', () => {
             const folderName = card.dataset.folder;
+            const folder = manifest.folders.find(f => f.name === folderName);
+            if (folder) {
+                speech.speak(folder.displayName);
+            }
             openFolder(folderName);
         });
     });
@@ -118,6 +148,8 @@ function openFolder(folderName) {
 function showImages(searchTerm = '') {
     if (!currentFolder) return;
     
+    focusedIndex = -1;
+    
     // Determine the image directory based on manifest format
     const imageDir = manifest.format === 'webp' ? 'downloads-webp' : 'downloads';
     
@@ -148,6 +180,8 @@ function showImages(searchTerm = '') {
     document.querySelectorAll('.image-card').forEach(card => {
         card.addEventListener('click', () => {
             const imageName = card.dataset.image;
+            const cleanName = imageName.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+            speech.speak(cleanName);
             openLightbox(`${imageDir}/${currentFolder.name}/${imageName}`, imageName);
         });
     });
@@ -183,8 +217,21 @@ function updateBreadcrumb() {
 }
 
 function setupEventListeners() {
+    // Mute button
+    elements.muteBtn.addEventListener('click', () => {
+        isMuted = !isMuted;
+        elements.muteBtn.classList.toggle('muted', isMuted);
+        elements.muteBtn.querySelector('.mute-icon').textContent = isMuted ? '🔇' : '🔊';
+        if (isMuted) {
+            speech.stop();
+        } else {
+            speech.speak('Sound enabled');
+        }
+    });
+    
     // Back button
     elements.backBtn.addEventListener('click', () => {
+        speech.speak('Back to folders');
         showFolders();
         elements.searchInput.value = '';
     });
@@ -207,16 +254,138 @@ function setupEventListeners() {
     });
     
     // Keyboard navigation
+    let focusedIndex = -1;
+    
     document.addEventListener('keydown', (e) => {
+        // Help overlay
+        if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
+            toggleHelpOverlay();
+            return;
+        }
+        
+        // Escape key handling
         if (e.key === 'Escape') {
-            if (elements.lightbox.style.display === 'block') {
+            if (document.getElementById('helpOverlay')?.style.display === 'block') {
+                toggleHelpOverlay();
+            } else if (elements.lightbox.style.display === 'block') {
                 closeLightbox();
             } else if (currentFolder) {
                 showFolders();
                 elements.searchInput.value = '';
             }
+            return;
+        }
+        
+        // Focus search with '/'
+        if (e.key === '/' && !e.shiftKey && e.target !== elements.searchInput) {
+            e.preventDefault();
+            elements.searchInput.focus();
+            return;
+        }
+        
+        // Mute toggle with 'm'
+        if (e.key === 'm' && e.target !== elements.searchInput) {
+            elements.muteBtn.click();
+            return;
+        }
+        
+        // Grid navigation with arrow keys
+        if (e.target !== elements.searchInput && elements.lightbox.style.display !== 'block') {
+            const grid = currentFolder ? elements.imagesGrid : elements.foldersGrid;
+            if (grid.style.display !== 'none') {
+                const items = grid.querySelectorAll(currentFolder ? '.image-card' : '.folder-card');
+                
+                if (items.length > 0) {
+                    const columns = Math.floor(grid.offsetWidth / items[0].offsetWidth);
+                    
+                    switch(e.key) {
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            focusedIndex = (focusedIndex + 1) % items.length;
+                            focusItem(items[focusedIndex]);
+                            break;
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            focusedIndex = focusedIndex <= 0 ? items.length - 1 : focusedIndex - 1;
+                            focusItem(items[focusedIndex]);
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            focusedIndex = (focusedIndex + columns) % items.length;
+                            focusItem(items[focusedIndex]);
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            focusedIndex = focusedIndex - columns < 0 ? 
+                                focusedIndex + items.length - (items.length % columns || columns) : 
+                                focusedIndex - columns;
+                            focusItem(items[focusedIndex]);
+                            break;
+                        case 'Enter':
+                            if (focusedIndex >= 0 && focusedIndex < items.length) {
+                                items[focusedIndex].click();
+                            }
+                            break;
+                    }
+                }
+            }
         }
     });
+    
+    function focusItem(item) {
+        document.querySelectorAll('.folder-card, .image-card').forEach(el => {
+            el.classList.remove('keyboard-focus');
+        });
+        item.classList.add('keyboard-focus');
+        item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Speak the item name when focused via keyboard
+        if (item.classList.contains('folder-card')) {
+            const folderName = item.dataset.folder;
+            const folder = manifest.folders.find(f => f.name === folderName);
+            if (folder) {
+                speech.speak(folder.displayName);
+            }
+        } else if (item.classList.contains('image-card')) {
+            const imageName = item.dataset.image;
+            const cleanName = imageName.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+            speech.speak(cleanName);
+        }
+    }
+    
+    function toggleHelpOverlay() {
+        let overlay = document.getElementById('helpOverlay');
+        
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'helpOverlay';
+            overlay.className = 'help-overlay';
+            overlay.innerHTML = `
+                <div class="help-content">
+                    <h2>Keyboard Shortcuts</h2>
+                    <div class="shortcuts-grid">
+                        <div class="shortcut"><kbd>?</kbd><span>Show this help</span></div>
+                        <div class="shortcut"><kbd>/</kbd><span>Focus search</span></div>
+                        <div class="shortcut"><kbd>Esc</kbd><span>Go back / Close</span></div>
+                        <div class="shortcut"><kbd>m</kbd><span>Toggle mute</span></div>
+                        <div class="shortcut"><kbd>←</kbd><kbd>→</kbd><span>Navigate items</span></div>
+                        <div class="shortcut"><kbd>↑</kbd><kbd>↓</kbd><span>Navigate rows</span></div>
+                        <div class="shortcut"><kbd>Enter</kbd><span>Open selected</span></div>
+                    </div>
+                    <div class="help-close">Press <kbd>Esc</kbd> or <kbd>?</kbd> to close</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+        
+        if (overlay.style.display === 'block') {
+            overlay.style.display = 'none';
+            speech.speak('Help closed');
+        } else {
+            overlay.style.display = 'block';
+            speech.speak('Keyboard shortcuts. Press escape to close');
+        }
+    }
 }
 
 // Start the app

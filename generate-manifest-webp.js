@@ -48,12 +48,24 @@ function generateManifest() {
                 const images = getImageFiles(folderPath);
                 
                 if (images.length > 0) {
+                    // For preview, try to get varied images (spread throughout the list)
+                    let preview = [];
+                    if (images.length <= 4) {
+                        preview = images.slice(0, 4);
+                    } else {
+                        // Get images from different parts of the array for variety
+                        const step = Math.floor(images.length / 4);
+                        for (let i = 0; i < 4 && i * step < images.length; i++) {
+                            preview.push(images[i * step]);
+                        }
+                    }
+                    
                     manifest.folders.push({
                         name: folder,
                         displayName: formatFolderName(folder),
                         images: images,
                         count: images.length,
-                        preview: images.slice(0, 4) // First 4 images for preview
+                        preview: preview
                     });
                 }
             }
